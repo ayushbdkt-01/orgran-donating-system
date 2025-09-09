@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Organ Donors - Organ Donation System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #10b981;
+            --accent-color: #06b6d4;
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+        }
+
+        [data-theme="light"] {
+            --bg-color: #ffffff;
+            --surface-color: #f8fafc;
+            --text-color: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, var(--surface-color) 100%);
+            color: var(--text-color);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface-color);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        }
+
+        .header {
+            text-align: center;
+            padding: 2rem 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .nav {
+            background: var(--surface-color);
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+
+        .nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .nav a:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .search-section {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .search-header h2 {
+            color: var(--primary-color);
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .search-input {
+            flex: 1;
+            max-width: 300px;
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--surface-color);
+            color: var(--text-color);
+            font-size: 1rem;
+        }
+
+        .filter-select {
+            padding: 12px 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--surface-color);
+            color: var(--text-color);
+            font-size: 1rem;
+            min-width: 150px;
+        }
+
+        .search-input:focus,
+        .filter-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .donors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .donor-card {
+            background: var(--surface-color);
+            border-radius: 15px;
+            padding: 1.5rem;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.6s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .donor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(37, 99, 235, 0.2);
+            border-color: var(--primary-color);
+        }
+
+        .donor-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, var(--secondary-color), var(--accent-color));
+        }
+
+        .donor-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .organ-icon {
+            font-size: 2.5rem;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .donor-info h3 {
+            color: var(--text-color);
+            font-size: 1.3rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .donor-info .organ-type {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .donor-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+        }
+
+        .detail-value {
+            color: var(--text-color);
+            font-weight: 500;
+        }
+
+        .contact-btn {
+            width: 100%;
+            padding: 10px 16px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .contact-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .no-results .icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .search-controls {
+                flex-direction: column;
+                align-items: center;
+            }
+            .search-input,
+            .filter-select {
+                max-width: 100%;
+                width: 100%;
+            }
+            .donors-grid {
+                grid-template-columns: 1fr;
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()">🌙/☀️</button>
+    
+    <header class="header">
+        <h1>Blockchain Based Secure Organ Donating System</h1>
+    </header>
+
+    <nav class="nav">
+        <ul>
+            <li><a href="selectPage.html">🏠 Home</a></li>
+            <li><a href="about.html">ℹ️ About</a></li>
+            <li><a href="contact.html">📞 Contact</a></li>
+            <li><a href="donate.html">❤️ Donate</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section class="search-section">
+            <div class="search-header">
+                <h2>Find Organ Donors 🔍</h2>
+                <p>Search for available organ donors that match your requirements</p>
+            </div>
+
+            <div class="search-controls">
+                <input type="text" class="search-input" id="searchInput" placeholder="Search by name or location...">
+                <select class="filter-select" id="organFilter">
+                    <option value="">All Organs</option>
+                    <option value="kidney">🫘 Kidney</option>
+                    <option value="liver">🫀 Liver</option>
+                    <option value="heart">❤️ Heart</option>
+                    <option value="lungs">🫁 Lungs</option>
+                    <option value="pancreas">🫃 Pancreas</option>
+                    <option value="cornea">👁️ Cornea</option>
+                    <option value="bone">🦴 Bone</option>
+                    <option value="skin">🧴 Skin</option>
+                </select>
+                <select class="filter-select" id="bloodFilter">
+                    <option value="">All Blood Groups</option>
+                    <option value="A+">A+</option>
+                    <option value="A-">A-</option>
+                    <option value="B+">B+</option>
+                    <option value="B-">B-</option>
+                    <option value="AB+">AB+</option>
+                    <option value="AB-">AB-</option>
+                    <option value="O+">O+</option>
+                    <option value="O-">O-</option>
+                </select>
+            </div>
+        </section>
+
+        <section class="donors-grid" id="donorsGrid">
+            <!-- Donor cards will be populated by JavaScript -->
+        </section>
+
+        <div class="no-results" id="noResults" style="display: none;">
+            <div class="icon">🔍</div>
+            <p>No donors found matching your criteria. Try adjusting your search filters.</p>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Made by Prachi ❤️</p>
+    </footer>
+
+    <script>
+        // Check if user is logged in
+        if (!localStorage.getItem('isLoggedIn')) {
+            window.location.href = 'login.html';
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const currentTheme = body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.body.setAttribute('data-theme', savedTheme);
+
+        // Sample donor data
+        const sampleDonors = [
+            {
+                id: 1,
+                name: "John Smith",
+                age: 28,
+                bloodGroup: "O+",
+                organType: "kidney",
+                location: "New York, NY",
+                phone: "+1-555-0123",
+                email: "john.smith@email.com"
+            },
+            {
+                id: 2,
+                name: "Sarah Johnson",
+                age: 35,
+                bloodGroup: "A+",
+                organType: "liver",
+                location: "Los Angeles, CA",
+                phone: "+1-555-0124",
+                email: "sarah.j@email.com"
+            },
+            {
+                id: 3,
+                name: "Michael Brown",
+                age: 42,
+                bloodGroup: "B-",
+                organType: "heart",
+                location: "Chicago, IL",
+                phone: "+1-555-0125",
+                email: "m.brown@email.com"
+            },
+            {
+                id: 4,
+                name: "Emily Davis",
+                age: 29,
+                bloodGroup: "AB+",
+                organType: "cornea",
+                location: "Houston, TX",
+                phone: "+1-555-0126",
+                email: "emily.davis@email.com"
+            },
+            {
+                id: 5,
+                name: "David Wilson",
+                age: 38,
+                bloodGroup: "O-",
+                organType: "kidney",
+                location: "Phoenix, AZ",
+                phone: "+1-555-0127",
+                email: "d.wilson@email.com"
+            },
+            {
+                id: 6,
+                name: "Lisa Anderson",
+                age: 31,
+                bloodGroup: "A-",
+                organType: "lungs",
+                location: "Philadelphia, PA",
+                phone: "+1-555-0128",
+                email: "lisa.a@email.com"
+            }
+        ];
+
+        // Get organ icon
+        function getOrganIcon(organType) {
+            const icons = {
+                kidney: "🫘",
+                liver: "🫀",
+                heart: "❤️",
+                lungs: "🫁",
+                pancreas: "🫃",
+                cornea: "👁️",
+                bone: "🦴",
+                skin: "🧴"
+            };
+            return icons[organType] || "🏥";
+        }
+
+        // Create donor card
+        function createDonorCard(donor) {
+            return `
+                <div class="donor-card" data-organ="${donor.organType}" data-blood="${donor.bloodGroup}">
+                    <div class="donor-header">
+                        <div class="organ-icon">${getOrganIcon(donor.organType)}</div>
+                        <div class="donor-info">
+                            <h3>${donor.name}</h3>
+                            <div class="organ-type">${donor.organType.charAt(0).toUpperCase() + donor.organType.slice(1)} Donor</div>
+                        </div>
+                    </div>
+                    <div class="donor-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Age:</span>
+                            <span class="detail-value">${donor.age} years</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Blood:</span>
+                            <span class="detail-value">${donor.bloodGroup}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value">${donor.location}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Contact:</span>
+                            <span class="detail-value">${donor.phone}</span>
+                        </div>
+                    </div>
+                    <button class="contact-btn" onclick="contactDonor('${donor.name}', '${donor.email}')">
+                        Contact Donor 📞
+                    </button>
+                </div>
+            `;
+        }
+
+        // Load and display donors
+        function loadDonors() {
+            // Combine sample data with any stored donations
+            const storedDonations = JSON.parse(localStorage.getItem('donations') || '[]');
+            const allDonors = [...sampleDonors, ...storedDonations.map(d => ({
+                id: d.id,
+                name: d.donorName,
+                age: parseInt(d.age),
+                bloodGroup: d.bloodGroup,
+                organType: d.organType,
+                location: d.address.split(',').slice(-2).join(',').trim(),
+                phone: d.phone,
+                email: d.email
+            }))];
+
+            displayDonors(allDonors);
+        }
+
+        // Display donors
+        function displayDonors(donors) {
+            const grid = document.getElementById('donorsGrid');
+            const noResults = document.getElementById('noResults');
+
+            if (donors.length === 0) {
+                grid.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            grid.innerHTML = donors.map(createDonorCard).join('');
+
+            // Add staggered animation
+            const cards = grid.querySelectorAll('.donor-card');
+            cards.forEach((card, index) => {
+                card.style.animationDelay = `${index * 0.1}s`;
+            });
+        }
+
+        // Filter donors
+        function filterDonors() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const organFilter = document.getElementById('organFilter').value;
+            const bloodFilter = document.getElementById('bloodFilter').value;
+
+            // Get all donors
+            const storedDonations = JSON.parse(localStorage.getItem('donations') || '[]');
+            const allDonors = [...sampleDonors, ...storedDonations.map(d => ({
+                id: d.id,
+                name: d.donorName,
+                age: parseInt(d.age),
+                bloodGroup: d.bloodGroup,
+                organType: d.organType,
+                location: d.address.split(',').slice(-2).join(',').trim(),
+                phone: d.phone,
+                email: d.email
+            }))];
+
+            const filtered = allDonors.filter(donor => {
+                const matchesSearch = donor.name.toLowerCase().includes(searchTerm) ||
+                                    donor.location.toLowerCase().includes(searchTerm);
+                const matchesOrgan = !organFilter || donor.organType === organFilter;
+                const matchesBlood = !bloodFilter || donor.bloodGroup === bloodFilter;
+
+                return matchesSearch && matchesOrgan && matchesBlood;
+            });
+
+            displayDonors(filtered);
+        }
+
+        // Contact donor
+        function contactDonor(name, email) {
+            alert(`Contacting ${name} at ${email}\n\nIn a real application, this would open your email client or messaging system.`);
+        }
+
+        // Event listeners
+        document.getElementById('searchInput').addEventListener('input', filterDonors);
+        document.getElementById('organFilter').addEventListener('change', filterDonors);
+        document.getElementById('bloodFilter').addEventListener('change', filterDonors);
+
+        // Load donors on page load
+        loadDonors();
+    </script>
+</body>
+</html>
